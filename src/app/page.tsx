@@ -1,69 +1,122 @@
-import Image from "next/image";
 
-export default function Home() {
+import Link from "next/link";
+import { getProducts } from "@/lib/products";
+import { ProductCard } from "@/components/products/product-card";
+
+export default async function HomePage() {
+  const { products, configured } = await getProducts({
+    limit: 4,
+    featured: true
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <>
+      <section className="hero">
+        <div className="hero-copy">
+          <span className="eyebrow">THE LUXORA EDIT · 01</span>
+
+          <h1>
+            Everyday,
+            <br />
+            elevated.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p>
+            Thoughtfully selected essentials for the way you live,
+            work, and move through the world.
           </p>
+
+          <Link className="button button-dark" href="/products">
+            Explore the collection
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="hero-art" aria-label="LUXORA brand artwork">
+          L.
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">EXPLORE LUXORA</span>
+            <h2>Shop by mood</h2>
+          </div>
+
+          <Link className="text-link" href="/products">
+            View all products
+          </Link>
+        </div>
+
+        <div className="category-grid">
+          <Link className="category-tile" href="/products">
+            <span>01 / EVERYDAY</span>
+            <strong>Everyday essentials ↗</strong>
+          </Link>
+
+          <Link
+            className="category-tile"
+            href="/products?sort=newest"
+          >
+            <span>02 / JUST IN</span>
+            <strong>New arrivals ↗</strong>
+          </Link>
+
+          <Link className="category-tile" href="/products?sale=true">
+            <span>03 / CONSIDERED FINDS</span>
+            <strong>Special offers ↗</strong>
+          </Link>
+        </div>
+      </section>
+
+      <section className="section featured-section">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">CURATED FOR YOU</span>
+            <h2>Featured products</h2>
+            <p>Discover something you will love.</p>
+          </div>
+
+          <Link className="text-link" href="/products">
+            Shop all
+          </Link>
+        </div>
+
+        {!configured && (
+          <div className="notice">
+            Connect Supabase and apply the database migrations to load
+            your published catalog.
+          </div>
+        )}
+
+        {products.length > 0 ? (
+          <div className="product-grid">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <h2>Your next favourite starts here.</h2>
+            <p className="muted">
+              Published products will appear here when your catalog
+              is configured.
+            </p>
+            <Link className="button button-light" href="/products">
+              Browse catalog
+            </Link>
+          </div>
+        )}
+      </section>
+
+      <section className="newsletter">
+        <span className="eyebrow">THE LUXORA LETTER</span>
+        <h2>Good things, occasionally.</h2>
+        <p>New collections and thoughtful finds, delivered with care.</p>
+        <Link className="button button-dark" href="/pages/contact">
+          Get in touch
+        </Link>
+      </section>
+    </>
   );
 }
