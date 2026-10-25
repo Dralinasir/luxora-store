@@ -4,18 +4,17 @@ export const storeConfig = {
   currency: "PKR",
   locale: "en-PK",
   supportEmail:
-    process.env.EMAIL_FROM_ADDRESS || "support@example.com"
+    process.env.EMAIL_FROM_ADDRESS || "support@example.com",
 };
 
-export function formatPKR(amountMinor: number): string {
-  if (!Number.isSafeInteger(amountMinor) || amountMinor < 0) {
+export function formatPKR(amount: number): string {
+  if (!Number.isSafeInteger(amount) || amount < 0) {
     throw new Error("Invalid monetary amount");
   }
 
-  // Database monetary values are stored in paisa.
   return new Intl.NumberFormat("en-PK", {
     style: "currency",
     currency: "PKR",
-    maximumFractionDigits: 2
-  }).format(amountMinor / 100);
+    maximumFractionDigits: 0,
+  }).format(amount);
 }

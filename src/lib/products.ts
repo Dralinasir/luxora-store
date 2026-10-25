@@ -6,18 +6,15 @@ export type Product = {
   name: string;
   slug: string;
   description: string | null;
-  price_minor: number;
-  sale_price_minor: number | null;
-  sku: string;
-  status: string;
-  featured: boolean;
-  category_id: string | null;
+  price: number;
+  compare_at_price: number | null;
+  category: string;
   image_url: string | null;
+  stock: number;
+  is_featured: boolean;
+  is_active: boolean;
   created_at: string;
-  categories?: {
-    name: string;
-    slug: string;
-  } | null;
+  updated_at: string;
 };
 
 type ProductOptions = {
@@ -33,21 +30,21 @@ export async function getProducts(options: ProductOptions = {}) {
   if (!supabase) {
     return {
       products: [] as Product[],
-      configured: false
+      configured: false,
     };
   }
 
   let query = supabase
     .from("products")
     .select(
-      "id,name,slug,description,price_minor,sale_price_minor,sku,status,featured,category_id,image_url,created_at,categories(name,slug)"
+      "id,name,slug,description,price,compare_at_price,category,image_url,stock,is_featured,is_active,created_at,updated_at"
     )
-    .eq("status", "published")
+    .eq("is_active", true)
     .order("created_at", { ascending: false })
     .limit(Math.min(Math.max(options.limit ?? 24, 1), 100));
 
   if (options.featured) {
-    query = query.eq("featured", true);
+    query = query.eq("is_featured", true);
   }
 
   if (options.search?.trim()) {
@@ -62,7 +59,7 @@ export async function getProducts(options: ProductOptions = {}) {
   }
 
   if (options.category) {
-    query = query.eq("categories.slug", options.category);
+    query = query.eq("category", options.category);
   }
 
   const { data, error } = await query;
@@ -73,13 +70,13 @@ export async function getProducts(options: ProductOptions = {}) {
     return {
       products: [] as Product[],
       configured: true,
-      error: true
+      error: true,
     };
   }
 
   return {
-    products: (data ?? []) as unknown as Product[],
-    configured: true
+    products: (data ?? []) as Product[],
+    configured: true,
   };
 }
 
@@ -91,10 +88,10 @@ export async function getProductBySlug(slug: string) {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id,name,slug,description,price_minor,sale_price_minor,sku,status,featured,category_id,image_url,created_at,categories(name,slug),product_images(id,url,alt_text,sort_order),product_variants(id,name,sku,price_minor,stock_quantity,attributes)"
+      "id,name,slug,description,price,compare_at_price,category,image_url,stock,is_featured,is_active,created_at,updated_at"
     )
     .eq("slug", slug)
-    .eq("status", "published")
+    .eq("is_active", true)
     .maybeSingle();
 
   if (error) {
@@ -102,5 +99,5 @@ export async function getProductBySlug(slug: string) {
     return null;
   }
 
-  return data;
+  return data as Product | null;
 }

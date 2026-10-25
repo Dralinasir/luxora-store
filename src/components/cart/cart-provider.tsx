@@ -6,7 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState
+  useState,
 } from "react";
 
 export type CartItem = {
@@ -31,7 +31,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "luxora-cart-v1";
 
 export function CartProvider({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) {
@@ -40,40 +40,49 @@ export function CartProvider({
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = window.localStorage.getItem(STORAGE_KEY);
 
       if (saved) {
         const parsed: unknown = JSON.parse(saved);
 
         if (Array.isArray(parsed)) {
-          const valid = parsed.filter(
-            (item): item is CartItem =>
-              item !== null &&
-              typeof item === "object" &&
-              typeof item.productId === "string" &&
-              typeof item.slug === "string" &&
-              typeof item.name === "string" &&
-              typeof item.priceMinor === "number" &&
-              Number.isSafeInteger(item.priceMinor) &&
-              item.priceMinor >= 0 &&
-              Number.isInteger(item.quantity) &&
-              item.quantity >= 1 &&
-              item.quantity <= 20
+          setItems(
+            parsed.filter(
+              (item): item is CartItem =>
+                item !== null &&
+                typeof item === "object" &&
+                typeof item.productId === "string" &&
+                typeof item.slug === "string" &&
+                typeof item.name === "string" &&
+                typeof item.priceMinor === "number" &&
+                Number.isFinite(item.priceMinor) &&
+                typeof item.quantity === "number" &&
+                Number.isInteger(item.quantity) &&
+                item.quantity >= 1 &&
+                item.quantity <= 20 &&
+                (typeof item.imageUrl === "string" ||
+                  item.imageUrl === null)
+            )
           );
-
-          setItems(valid);
         }
       }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error("Could not load cart:", error);
+    } finally {
+      setReady(true);
     }
-
-    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (ready) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    if (!ready) return;
+
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(items)
+      );
+    } catch (error) {
+      console.error("Could not save cart:", error);
     }
   }, [items, ready]);
 
@@ -92,7 +101,7 @@ export function CartProvider({
               entry.productId === item.productId
                 ? {
                     ...entry,
-                    quantity: Math.min(20, entry.quantity + 1)
+                    quantity: Math.min(20, entry.quantity + 1),
                   }
                 : entry
             );
@@ -127,7 +136,7 @@ export function CartProvider({
 
       clear: () => setItems([]),
 
-      count: items.reduce((sum, item) => sum + item.quantity, 0)
+      count: items.reduce((sum, item) => sum + item.quantity, 0),
     }),
     [items]
   );
